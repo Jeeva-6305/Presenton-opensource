@@ -78,13 +78,11 @@ function normalizeExportOutputPath(params: {
   urlValue?: string;
 }): string {
   const { pathValue, urlValue } = params;
-  const appData = process.env.APP_DATA_DIRECTORY?.trim();
+  const appData =
+    process.env.APP_DATA_DIRECTORY?.trim() ||
+    path.join(getPresentonAppRoot(), "app_data");
 
   const resolveAppDataRelative = (value: string): string => {
-    if (!appData) {
-      throw new Error("APP_DATA_DIRECTORY is required for relative export paths.");
-    }
-
     const normalized = value.startsWith("/") ? value.slice(1) : value;
     if (!normalized.startsWith("app_data/")) {
       return path.join(appData, normalized);
@@ -157,7 +155,7 @@ async function runBundledPresentationExportLocked(params: {
   const appRoot = getPresentonAppRoot();
 
   const nextjsUrl =
-    process.env.NEXT_PUBLIC_URL?.trim() || "http://127.0.0.1";
+    process.env.NEXT_PUBLIC_URL?.trim() || "http://127.0.0.1:3000";
   const q = new URLSearchParams({ id: presentationId, format });
   const sessionToken = extractSessionTokenFromCookieHeader(cookieHeader);
   if (sessionToken) {

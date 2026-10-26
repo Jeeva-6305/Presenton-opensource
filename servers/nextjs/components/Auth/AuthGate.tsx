@@ -27,24 +27,19 @@ const initialStatus: AuthStatus = {
   role: null,
 };
 
-export default function AuthGate() {
-  const [status, setStatus] = useState<AuthStatus>(initialStatus);
-  const [isLoading, setIsLoading] = useState(true);
+export default function AuthGate({
+  initialStatus: serverStatus,
+}: {
+  initialStatus?: AuthStatus | null;
+} = {}) {
+  const [status, setStatus] = useState<AuthStatus>(serverStatus ?? initialStatus);
+  const [isLoading, setIsLoading] = useState(!serverStatus);
   const [isRedirecting, setIsRedirecting] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [hasMetSplashDuration, setHasMetSplashDuration] = useState(false);
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const isSetupMode = useMemo(() => !status.configured, [status.configured]);
-
-  useEffect(() => {
-    const timeout = window.setTimeout(() => {
-      setHasMetSplashDuration(true);
-    }, PRESENTON_SPLASH_MIN_DURATION_MS);
-
-    return () => window.clearTimeout(timeout);
-  }, []);
 
   useEffect(() => {
     if (isAuthDisabled()) {
@@ -63,8 +58,10 @@ export default function AuthGate() {
       return;
     }
 
-    void refreshStatus();
-  }, []);
+    if (!serverStatus) {
+      void refreshStatus();
+    }
+  }, [serverStatus]);
 
   useEffect(() => {
     if (
@@ -150,8 +147,7 @@ export default function AuthGate() {
     if (
       isLoading ||
       isRedirecting ||
-      status.authenticated ||
-      !hasMetSplashDuration
+      status.authenticated
     ) {
       return;
     }
@@ -160,7 +156,6 @@ export default function AuthGate() {
       flow: status.configured ? "sign_in" : "setup",
     });
   }, [
-    hasMetSplashDuration,
     isLoading,
     isRedirecting,
     status.authenticated,
@@ -325,8 +320,7 @@ export default function AuthGate() {
   if (
     isLoading ||
     isRedirecting ||
-    status.authenticated ||
-    !hasMetSplashDuration
+    status.authenticated
   ) {
     return <PresentonSplashLoader message="Preparing your workspace..." />;
   }

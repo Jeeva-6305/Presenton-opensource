@@ -22,7 +22,7 @@ const page = async () => {
         );
     }
 
-    return <AuthGate />;
+    return <AuthGate initialStatus={status} />;
 };
 
 export default page;
