@@ -334,6 +334,15 @@ class DocumentsLoader:
                         file_path,
                     )
                     pass
+            if Path(file_path).suffix.lower() in PDF_EXTENSIONS:
+                try:
+                    LOGGER.info("[DocumentsLoader] Trying pdfplumber fallback file=%s", file_path)
+                    with pdfplumber.open(file_path) as pdf:
+                        extracted = "\n\n".join(page.extract_text() or "" for page in pdf.pages)
+                        if extracted.strip():
+                            return extracted
+                except Exception:
+                    LOGGER.exception("[DocumentsLoader] pdfplumber fallback failed file=%s", file_path)
             raise HTTPException(
                 status_code=500,
                 detail=f"Failed to parse document {os.path.basename(file_path)}: {exc}",

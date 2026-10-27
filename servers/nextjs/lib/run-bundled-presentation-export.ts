@@ -176,6 +176,24 @@ async function runBundledPresentationExportLocked(params: {
   const workDir = await fs.mkdtemp(path.join(tempBase, "export-"));
   const exportTaskPath = path.join(workDir, "export_task.json");
 
+  const appData =
+    process.env.APP_DATA_DIRECTORY?.trim() ||
+    path.join(appRoot, "app_data");
+  const appDataFileUrl = `file://${path.resolve(appData).replace(/\\/g, "/")}/`;
+  const replaceUrls: Record<string, string> = {
+    "/app_data/": appDataFileUrl,
+    "http://127.0.0.1:3000/app_data/": appDataFileUrl,
+    "http://127.0.0.1:8000/app_data/": appDataFileUrl,
+    "http://localhost:3000/app_data/": appDataFileUrl,
+    "http://localhost:8000/app_data/": appDataFileUrl,
+  };
+  if (fastapiUrl) {
+    replaceUrls[`${fastapiUrl.replace(/\/+$/, "")}/app_data/`] = appDataFileUrl;
+  }
+  if (nextjsUrl) {
+    replaceUrls[`${nextjsUrl.replace(/\/+$/, "")}/app_data/`] = appDataFileUrl;
+  }
+
   const exportTask = {
     type: "export",
     url: pptUrl,
@@ -183,6 +201,7 @@ async function runBundledPresentationExportLocked(params: {
     title: sanitizeFilename(title ?? "presentation"),
     fastapiUrl: fastapiUrl || undefined,
     cookieHeader: cookieHeader || undefined,
+    replaceUrls,
   };
 
   try {
